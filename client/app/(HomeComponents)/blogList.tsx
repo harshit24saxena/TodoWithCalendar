@@ -33,8 +33,9 @@ export default function BlogList() {
     },
   ];
   const dragConstraintsRef = useRef(null)
-  function dragEnd(event:Event){
-     console.log(event.target.classList.add("line-through"))
+  function dragEnd(event: MouseEvent | TouchEvent | PointerEvent) {
+    const target = event.target as HTMLElement | null;
+    target?.classList?.add("line-through");
   }
   return (
     <div ref={dragConstraintsRef}>
