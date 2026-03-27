@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+--bg-primary: #FFFFFF;
+--bg-secondary: #ebddd2;
+--bg-accent: #FDE6C5;
+
+--cta : #FBA177;
+
+--accent-orange: #FBA177;
+--accent-peach: #FCAFA0;
+--accent-yellow: #FCC959;
+
+--text-primary: #efe4e4;
+--spacing-small: 24px;
+--spacing-medium: 48px;
+}
+
+
+
+@theme inline {
+  --color-background: var(--bg-secondary);
+  --color-foreground: var(--bg-accent);
+  --font-poppins: var(--font-poppins-custom);
+  --spacing-sm: var(--spacing-small);
+  --spacing-md: var(--spacing-medium);
+  --spacing-lg: var(--spacing-large);
+}
+
+ 
+body {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0;
+  background: var(--bg-secondary); 
+  color: var(--text-primary);
+}
