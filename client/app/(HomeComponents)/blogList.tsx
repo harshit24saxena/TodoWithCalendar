@@ -2,6 +2,8 @@
 import { motion } from "motion/react"
 import { useRef, useState } from "react";
 
+type Event = { target: { classList: { add: (arg0: string) => any; }; }; }
+
 export default function BlogList() {
   const cardVariant = [
     "bg-(--accent-peach) text-[color-mix(in_srgb,var(--accent-peach),black_20%)] shadow-[-10px_0_color-mix(in_srgb,var(--accent-peach),black_10%)] drop-shadow-lg",
@@ -31,7 +33,7 @@ export default function BlogList() {
     },
   ];
   const dragConstraintsRef = useRef(null)
-  function dragEnd(event, info){
+  function dragEnd(event:Event){
      console.log(event.target.classList.add("line-through"))
   }
   return (
