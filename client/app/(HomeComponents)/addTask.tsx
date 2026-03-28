@@ -17,8 +17,9 @@ function addTask() {
         <line fill="white" stroke="white" strokeWidth="5" id="middle" x1="50" y1="20" x2="50" y2="80" />
       </svg>
     </button>
-    <svg className="max-w-[520px] fixed bottom-0" viewBox="0 0 100 10">
-      <path fill="var(--cta)" d="M 0 0 L 44 0 C 45 5 53 8 56 0 L 100 0 L 100 10 L 0 10 Z" />
+    <svg className="fixed bottom-0 sm:w-[500px]" viewBox="0 0 100 10">
+      <path fill="var(--cta)" d="M 0 0 L 42 0 C 45 5 53 8 58 0 L 100 0 L 100 10 L 0 10 Z" />
+      <path className="hidden sm:block" fill="var(--cta)" d="M 0 0 L 44 0 C 45 5 53 8 56 0 L 100 0 L 100 10 L 0 10 Z" />
     </svg>
   </>
   )

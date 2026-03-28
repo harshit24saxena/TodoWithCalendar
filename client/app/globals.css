@@ -25,11 +25,12 @@
   --spacing-sm: var(--spacing-small);
   --spacing-md: var(--spacing-medium);
   --spacing-lg: var(--spacing-large);
+   --breakpoint-sm: 500px;
 }
 
  
 body {
-  max-width: 500px;
+  max-width: var(--breakpoint-sm);
   margin: 0 auto;
   padding: 0;
   background: var(--bg-secondary); 
