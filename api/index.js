@@ -6,9 +6,15 @@ const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 
+// TO ADD IN OAUTH ROUTE 
+// 1. Add state in auth url 
+// 2. Add refresh token in database
+// 3. Add access token from refresh token
+// 4. Check if access token is expired and redirect to login route
+
 
 // The scope for reading calendar events. 
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const SCOPES = 'https://www.googleapis.com/auth/calendar';
 // Generate a secure random state value.
 const state = crypto.randomBytes(32).toString('hex');
 
@@ -17,14 +23,12 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_SECRET,
   process.env.REDIRECT_URI, 
 ); 
-console.log('REDIRECT_URI:', process.env.REDIRECT_URI)
-console.log('CLIENT_ID loaded:', !!oauth2Client._clientId)
 
 // server 
 const app = express()
 app.use(express.json())
 
-app.get("/", (req, res) => {
+app.get("/login", (req, res) => {
 
 
 // Generate a url that asks permissions for the Drive activity and Google Calendar scope
@@ -46,7 +50,11 @@ app.get('/oauth2callback', async (req, res) => {
 
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
-
+    let access_token = tokens.access_token;
+    let refresh_token = tokens.refresh_token;
+    console.log(access_token,refresh_token);
+    
+ 
     // Now you can call Google Calendar API
     
 /**
@@ -54,10 +62,10 @@ app.get('/oauth2callback', async (req, res) => {
 */
 async function listEvents() {
   // Create a new Calendar API client.
-  const calendar = google.calendar({version: 'v3', auth});
+  const calendar = google.calendar({version: 'v3', auth: oauth2Client});
   // Get the list of events.
   const result = await calendar.events.list({
-      calendarId: 'primary',
+    calendarId: 'primary',
     timeMin: new Date().toISOString(),
     maxResults: 10,
     singleEvents: true,
@@ -79,7 +87,7 @@ async function listEvents() {
 
 listEvents();
 
-    res.send('Authentication successful! You can close this tab.');
+    res.redirect('/');
   } catch (err) {
     console.error('Error retrieving tokens:', err);
     res.status(500).send('Authentication failed: ' + err.message);
