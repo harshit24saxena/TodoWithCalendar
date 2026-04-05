@@ -27,6 +27,10 @@ const oauth2Client = new google.auth.OAuth2(
 // server 
 const app = express()
 app.use(express.json())
+app.post('/addEvent',(req,res)=>{
+  console.log(req.body)
+  res.send("<h1>this is add event page</h1>")
+})
 
 app.get("/login", (req, res) => {
 

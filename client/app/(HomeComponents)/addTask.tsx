@@ -1,11 +1,11 @@
 "use client"
-import { useState } from "react"
+import { useStore } from "../store"
 import InputForm from "./inputForm"
 
 
 
 function addTask() {
-  const [toggle, setToggle] = useState(false)
+  const {toggle, setToggle}:any = useStore()
   return (
   <>
     {toggle && <InputForm />}

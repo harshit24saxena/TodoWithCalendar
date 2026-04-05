@@ -25,7 +25,7 @@
   --spacing-sm: var(--spacing-small);
   --spacing-md: var(--spacing-medium);
   --spacing-lg: var(--spacing-large);
-   --breakpoint-sm: 500px;
+  --breakpoint-sm: 500px;
 }
 
  

@@ -1,22 +1,17 @@
 "use client"
-import { motion, useMotionValue, useTransform } from "motion/react"
+import { motion } from "motion/react"
 import { useRef } from "react"
+import { useStore } from "../store"
 
 const cardVariant = [
-  "bg-(--accent-peach)",
-  "bg-(--accent-orange)",
-  "bg-(--accent-yellow)",
+  "bg-(--accent-peach) text-[color-mix(in_oklab,var(--accent-peach)_100%,#000F0F_30%)]",
+  "bg-(--accent-orange) text-[color-mix(in_oklab,var(--accent-orange)_100%,#000F0F_30%)]",
+  "bg-(--accent-yellow) text-[color-mix(in_oklab,var(--accent-yellow)_100%,#000F0F_30%)]",
 ]
 
-const blog = [
-  { title: "Understanding React Server Components", description: "..." },
-  { title: "The Power of Tailwind CSS", description: "..." },
-  { title: "Mastering TypeScript", description: "..." },
-  { title: "Building Accessible Web Apps", description: "..." },
-  { title: "Next.js App Router Guide", description: "..." },
-]
 
-function DraggableCard({item, i, dradConstraintRef }:{item:any, i:number, dradConstraintRef:any}) {
+
+function DraggableCard({item, i, dradConstraintRef, removeList }:{item:any, i:number, dradConstraintRef:any, removeList:any}) {
   return (
     <motion.div
       id={i.toString()}
@@ -29,6 +24,7 @@ function DraggableCard({item, i, dradConstraintRef }:{item:any, i:number, dradCo
           console.log("Right swipe", currentItem?.classList.add("opacity-50"))
         } else if (info.offset.x < -100) {
           console.log("Left swipe", i)
+          removeList(item.title, item.date)
         }
       }}
       className={`flex flex-col gap-2 p-8 my-6 rounded-2xl ${cardVariant[i % cardVariant.length]}`}
@@ -40,11 +36,12 @@ function DraggableCard({item, i, dradConstraintRef }:{item:any, i:number, dradCo
 }
 
 export default function BlogList() {
+  const {list, removeList}:any = useStore()
   const dradConstraintRef = useRef(null)
   return (
     <div ref={dradConstraintRef}>
-      {blog.map((item, i) => (
-        <DraggableCard key={i} item={item} i={i} dradConstraintRef={dradConstraintRef} />
+      {list.map((item:any, i:number) => (
+        <DraggableCard key={i} item={item} i={i} dradConstraintRef={dradConstraintRef} removeList={removeList} />
       ))}
     </div>
   )
