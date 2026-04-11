@@ -1,10 +1,9 @@
 import { useStore } from "../store"
 export default function InputForm() {
-const {addList, setToggle}:any = useStore()
+const {addList, setAddFormToggle}:any = useStore()
 async function formSubmit(formData:any){
-  console.log(formData.get("title"), formData.get("date"))
   addList(formData.get("title"), formData.get("date"))
-  setToggle(false)
+  setAddFormToggle(false)
 
 //   const res = await fetch("http://localhost:8000/addEvent", {
 //     method: "POST",

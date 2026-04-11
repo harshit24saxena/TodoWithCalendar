@@ -1,103 +1,134 @@
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
-
-// TO ADD IN OAUTH ROUTE 
-// 1. Add state in auth url 
-// 2. Add refresh token in database
-// 3. Add access token from refresh token
-// 4. Check if access token is expired and redirect to login route
+const supabase = require('./supabaseClient.js');
 
 
-// The scope for reading calendar events. 
-const SCOPES = 'https://www.googleapis.com/auth/calendar';
-// Generate a secure random state value.
-const state = crypto.randomBytes(32).toString('hex');
-
+// create auth client object 
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
-  process.env.REDIRECT_URI, 
-); 
+  process.env.REDIRECT_URI,
+);
 
 // server 
 const app = express()
 app.use(express.json())
-app.post('/addEvent',(req,res)=>{
-  console.log(req.body)
-  res.send("<h1>this is add event page</h1>")
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }    // true only with HTTPS
+}));
+
+app.get('/', async (req, res) => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*');
+  if (error) return res.status(500).json(error);
+  console.log(data)
+  res.json(data);
+})
+
+app.get('/insert', async (req, res) => {
+  // const {email,password} = req.body;
+  const { data, error } = await supabase
+    .from('users')
+    .insert({ name: 'Honey', email: 'honey@gmail.com', hash_password: '5678' })
+  if (error) return res.status(500).json(error);
+  res.json(data);
+})
+
+app.get('/addEvent', async(req, res) => {
+
+  // fetching refresh token from database
+    const {data, error} = await supabase
+    .from('users')
+    .select('google_refresh_token')
+    .eq('email', 'honey@gmail.com');
+    oauth2Client.setCredentials({
+      refresh_token: data[0].google_refresh_token
+    });
+  if (error) return res.status(500).json(error);
+
+
+        let event = {
+        summary: 'Google Calendar API Quickstart',
+        description: 'This is a test event',
+        start: {
+          dateTime: '2026-05-06T12:00:00',// YYYY/MM/DDTHH:MM:SS
+          timeZone: 'Asia/Kolkata',
+        },
+        end: {
+          dateTime: '2026-05-06T23:59:00',
+          timeZone: 'Asia/Kolkata', 
+        },
+      };
+
+      /*
+      This call calendar api and create event
+      */
+      const calendar = google.calendar({version: 'v3',auth: oauth2Client});
+      const response = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    })
+  res.send(`<h1>this is add event page <a target="_blank" href = ${response.data.htmlLink}> Calendar link </a></h1>`)
+
 })
 
 app.get("/login", (req, res) => {
 
+  // GOOGLE OAUTH authorizationURL parameters
+  // The scope for reading calendar events. 
+  const SCOPES = 'https://www.googleapis.com/auth/calendar';
+  // Generate a secure random state value.
+  const state = crypto.randomBytes(32).toString('hex');
+  // Store state in the session
+  req.session.state = state;
 
-// Generate a url that asks permissions for the Drive activity and Google Calendar scope
-const authorizationUrl = oauth2Client.generateAuthUrl({
-  // 'online' (default) or 'offline' (gets refresh_token)
-  access_type: 'offline',
-  /** Pass in the scopes array defined above. 
-    * Alternatively, if only one scope is needed, you can pass a scope URL as a string */
-  scope: SCOPES,
-  // Enable incremental authorization. Recommended as a best practice.
-  include_granted_scopes: true,
-});
-res.redirect(authorizationUrl);
-})  
+  // Google Oauth authorizationURL generation
+  const authorizationUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent', // only for testing 'send refresh token on every authentiction'
+    scope: SCOPES,
+    include_granted_scopes: true,
+    // Include the state parameter to reduce the risk of CSRF attacks.
+    state: state,
+  });
+  res.redirect(authorizationUrl);
+})
+
 app.get('/oauth2callback', async (req, res) => {
+
+  // accessing tokens for api
   try {
     const code = req.query.code;
     if (!code) return res.status(400).send('Missing authorization code');
-
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
-    let access_token = tokens.access_token;
-    let refresh_token = tokens.refresh_token;
-    console.log(access_token,refresh_token);
-    
- 
-    // Now you can call Google Calendar API
-    
-/**
- * Lists the next 10 events on the user's primary calendar.
-*/
-async function listEvents() {
-  // Create a new Calendar API client.
-  const calendar = google.calendar({version: 'v3', auth: oauth2Client});
-  // Get the list of events.
-  const result = await calendar.events.list({
-    calendarId: 'primary',
-    timeMin: new Date().toISOString(),
-    maxResults: 10,
-    singleEvents: true,
-    orderBy: 'startTime',
-  });
-  const events = result.data.items;
-  if (!events || events.length === 0) {
-    console.log('No upcoming events found.');
-    return;
-  }
-  console.log('Upcoming 10 events:');
+    const refresh_token = tokens.refresh_token;
 
-  // Print the start time and summary of each event.
-  for (const event of events) {
-      const start = event.start?.dateTime ?? event.start?.date;
-      console.log(`${start} - ${event.summary}`);
-    }
-}
+    // updating supabase with refresh token
+    const { error } = await supabase 
+      .from('users')
+      .update({ google_refresh_token: refresh_token })
+      .eq('email', 'honey@gmail.com') // change hard code value to dynamic value
+    if (error) return res.status(500).json(error);
+    res.redirect("/addEvent")
 
-listEvents();
-
-    res.redirect('/');
   } catch (err) {
     console.error('Error retrieving tokens:', err);
     res.status(500).send('Authentication failed: ' + err.message);
   }
-  
+
 });
+
+
 app.listen(8000, () => {
-    console.log("Server is running on port 8000") 
+  console.log("Server is running on port 8000")
 })

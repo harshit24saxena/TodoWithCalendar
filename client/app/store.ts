@@ -10,6 +10,8 @@ export const useStore = create((set) => ({
     ],
     addList: (title: string, data: string) => set((state: any) => ({ list: [...state.list, { title, data }] })),
     removeList: (title: string, data: string) => set((state: any) => ({ list: state.list.filter((item: any) => item.title !== title || item.date !== data) })),
-    toggle: false,
-    setToggle: (toggle: boolean) => set({ toggle }),
+    addFormToggle: false,
+    setAddFormToggle: (toggle: boolean) => set({ addFormToggle: toggle }),
+    navToggle: false,
+    setNavToggle: (toggle: boolean) => set({ navToggle: toggle }),
 }))

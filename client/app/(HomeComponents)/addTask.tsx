@@ -5,14 +5,14 @@ import { motion } from "motion/react"
 
 
 function addTask() {
-  const {toggle, setToggle}:any = useStore()
+  const {addFormToggle, setAddFormToggle}:any = useStore()
   return (
   <>
-    {toggle && <InputForm />}
+    {addFormToggle && <InputForm />}
     <button 
-    onClick={()  => setToggle(!toggle)}
+    onClick={()  => setAddFormToggle(!addFormToggle)}
     className='bg-(--cta) z-2 fixed bottom-8 left-1/2 -translate-x-1/2 w-md h-md rounded-full shadow-md shadow-gray-700 '>
-      <motion.svg animate={{rotate: toggle ? 45 : 0}} className="w-md h-md cursor-pointer" viewBox="0 0 100 100">
+      <motion.svg animate={{rotate: addFormToggle ? 45 : 0}} className="w-md h-md cursor-pointer" viewBox="0 0 100 100">
         <line fill="white" stroke="white" strokeWidth="5" id="top" x1="20" y1="50" x2="80" y2="50" />
         <line fill="white" stroke="white" strokeWidth="5" id="middle" x1="50" y1="20" x2="50" y2="80" />
       </motion.svg>

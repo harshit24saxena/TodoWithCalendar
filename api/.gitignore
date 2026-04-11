@@ -40,3 +40,4 @@ TodoWithCalendar.googleCalendarClientOauth.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+Task.md
