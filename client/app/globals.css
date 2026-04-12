@@ -6,6 +6,7 @@
 --bg-accent: #FDE6C5;
 
 --cta : #FBA177;
+--cta-dark : #fa8c59;
 
 --accent-orange: #FBA177;
 --accent-peach: #FCAFA0;
@@ -16,7 +17,7 @@
 --spacing-medium: 48px;
 }
 
-
+ 
 
 @theme inline {
   --color-background: var(--bg-secondary);
