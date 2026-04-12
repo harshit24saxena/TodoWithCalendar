@@ -18,6 +18,15 @@ const oauth2Client = new google.auth.OAuth2(
 // server 
 const app = express()
 app.use(express.json())
+
+// Allow requests from Next.js dev client
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -34,58 +43,70 @@ app.get('/', async (req, res) => {
   res.json(data);
 })
 
-app.get('/insert', async (req, res) => {
-  // const {email,password} = req.body;
-  const { data, error } = await supabase
-    .from('users')
-    .insert({ name: 'Honey', email: 'honey@gmail.com', hash_password: '5678' })
-  if (error) return res.status(500).json(error);
-  res.json(data);
+// Returns the currently logged-in user from the session
+app.get('/me', (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: 'Not logged in.' });
+  }
+  res.json({ user: req.session.user });
 })
 
-app.get('/addEvent', async(req, res) => {
+app.post('/addEvent', async(req, res) => {
 
+  const {title, date, startTime, endTime, user} = req.body;
+  
   // fetching refresh token from database
     const {data, error} = await supabase
     .from('users')
     .select('google_refresh_token')
-    .eq('email', 'honey@gmail.com');
-    oauth2Client.setCredentials({
-      refresh_token: data[0].google_refresh_token
-    });
+    .eq('email', user)
+    .single();
+
   if (error) return res.status(500).json(error);
+  if (!data || !data.google_refresh_token) {
+    return res.status(404).redirect("http://localhost:3000/login");
+  }
 
+  oauth2Client.setCredentials({
+    refresh_token: data.google_refresh_token
+  });
 
-        let event = {
-        summary: 'Google Calendar API Quickstart',
-        description: 'This is a test event',
-        start: {
-          dateTime: '2026-05-06T12:00:00',// YYYY/MM/DDTHH:MM:SS
-          timeZone: 'Asia/Kolkata',
-        },
-        end: {
-          dateTime: '2026-05-06T23:59:00',
-          timeZone: 'Asia/Kolkata', 
-        },
-      };
+  let event = {
+    summary: `${title}`,
+    start: {
+      dateTime: `${date}T${startTime}:00`, // YYYY/MM/DDTHH:MM:SS
+      timeZone: 'Asia/Kolkata',
+    },
+    end: {
+      dateTime: `${date}T${endTime}:00`,
+      timeZone: 'Asia/Kolkata',
+    },
+  };
 
-      /*
-      This call calendar api and create event
-      */
-      const calendar = google.calendar({version: 'v3',auth: oauth2Client});
-      const response = await calendar.events.insert({
-      calendarId: 'primary',
-      resource: event,
-    })
-  res.send(`<h1>this is add event page <a target="_blank" href = ${response.data.htmlLink}> Calendar link </a></h1>`)
-
+  // This calls the calendar API and creates an event
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  try {
+  const response = await calendar.events.insert({
+    calendarId: 'primary',
+    resource: event,
+  });
+  }
+  catch(err){
+    console.log(err)
+  }
+  res.status(200).json({ message: 'Event added successfully.' });
 })
+
 
 app.get("/login", (req, res) => {
 
   // GOOGLE OAUTH authorizationURL parameters
-  // The scope for reading calendar events. 
-  const SCOPES = 'https://www.googleapis.com/auth/calendar';
+  // Request calendar + user profile info scopes
+  const SCOPES = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+  ];
   // Generate a secure random state value.
   const state = crypto.randomBytes(32).toString('hex');
   // Store state in the session
@@ -113,13 +134,20 @@ app.get('/oauth2callback', async (req, res) => {
     oauth2Client.setCredentials(tokens);
     const refresh_token = tokens.refresh_token;
 
-    // updating supabase with refresh token
-    const { error } = await supabase 
+    // --- Fetch current user info from Google ---
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data: googleUser } = await oauth2.userinfo.get();
+  
+    // hash_password is null for upcoming implementation
+    const { error } = await supabase
       .from('users')
-      .update({ google_refresh_token: refresh_token })
-      .eq('email', 'honey@gmail.com') // change hard code value to dynamic value
+      .upsert(
+        { name: googleUser.name, email: googleUser.email, hash_password: null, google_refresh_token: refresh_token },
+        { onConflict: 'email' }
+      );
     if (error) return res.status(500).json(error);
-    res.redirect("/addEvent")
+
+    res.redirect("http://localhost:3000/?user="+googleUser.email)
 
   } catch (err) {
     console.error('Error retrieving tokens:', err);

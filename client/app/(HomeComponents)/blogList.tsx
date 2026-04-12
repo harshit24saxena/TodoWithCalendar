@@ -3,7 +3,7 @@ import { motion } from "motion/react"
 import { useRef } from "react"
 import { useStore } from "../store"
 
-type Item = { title: string, date: string }
+type Item = { title: string, date: string, startTime: string, endTime: string }
 
 const cardVariant = [
   "bg-(--accent-peach) text-[color-mix(in_oklab,var(--accent-peach)_100%,#000F0F_30%)] shadow-[-8px_0_color-mix(in_oklab,var(--accent-peach)_100%,#000F0F_30%),0_5px_5px_2px_rgba(0,0,0,0.3)]",
@@ -26,8 +26,8 @@ function onDragEnd(event: any, info: any,i:number, item: Item, removeList: Funct
   if (info.offset.x > 100) {
     alert("task completed")
   }
-  if (info.offset.x < -100) {
-    removeList(item.title, item.date)
+  if (info.offset.x < -50) {
+    removeList(item.title, item.date, item.startTime, item.endTime)
   }
 }
 
@@ -42,7 +42,8 @@ function DraggableCard({ item, i, dradConstraintRef, removeList }: { item: any, 
       className={`flex flex-col gap-2 p-8 my-6 rounded-2xl ${cardVariant[i % cardVariant.length]}`}
     >
       <span className="font-bold">{item.title}</span>
-      <h1>{item.description}</h1>
+      <span className="font-bold">{item.date}</span>
+      <h1>{item.startTime} - {item.endTime}</h1>
     </motion.div>
   )
 }
