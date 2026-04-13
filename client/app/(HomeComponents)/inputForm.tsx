@@ -1,17 +1,14 @@
 import { useStore } from "../store"
-import { useSearchParams } from 'next/navigation'
 import { motion } from "motion/react"
 
 export default function InputForm() {
-const {addList, setAddFormToggle}:any = useStore()
-const searchParams = useSearchParams()
-const user = searchParams.get("user")
+const {addList, setAddFormToggle, User}:any = useStore()
 
 async function formSubmit(formData:any){
   addList(formData.get("title"), formData.get("date"), formData.get("startTime"), formData.get("endTime"))
   setAddFormToggle(false)
 
-  const res = await fetch("http://localhost:8000/addEvent", {
+  await fetch("http://localhost:8000/addEvent", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -21,7 +18,7 @@ async function formSubmit(formData:any){
       date: formData.get("date"),
       startTime: formData.get("startTime"),
       endTime: formData.get("endTime"),
-      user: user,
+      user: User,
     }),
   })
 }

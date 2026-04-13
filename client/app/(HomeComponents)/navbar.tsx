@@ -3,7 +3,6 @@ import {useStore} from "../store"
 import {motion} from "motion/react"
 export default function Navbar() {
     const {navToggle, setNavToggle}:any = useStore()
-    console.log(navToggle)
     return (
         <nav className="flex justify-between items-center my-sm p-md pt-sm">
             <h1 className="text-black font-bold text-4xl ">Daily Task</h1>

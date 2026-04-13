@@ -2,8 +2,10 @@
 import { motion } from "motion/react"
 import { useRef } from "react"
 import { useStore } from "../store"
+import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 
-type Item = { title: string, date: string, startTime: string, endTime: string }
+type Item = { id: string, title: string, date: string, startTime: string, endTime: string }
 
 const cardVariant = [
   "bg-(--accent-peach) text-[color-mix(in_oklab,var(--accent-peach)_100%,#000F0F_30%)] shadow-[-8px_0_color-mix(in_oklab,var(--accent-peach)_100%,#000F0F_30%),0_5px_5px_2px_rgba(0,0,0,0.3)]",
@@ -11,50 +13,103 @@ const cardVariant = [
   "bg-(--accent-yellow) text-[color-mix(in_oklab,var(--accent-yellow)_100%,#000F0F_30%)] shadow-[-8px_0_color-mix(in_oklab,var(--accent-yellow)_100%,#000F0F_30%),0_5px_5px_2px_rgba(0,0,0,0.3)]",
 ]
 
-function onDrag(event: any, info: any, i: number) {
+function onDrag(event: any, info: any, i: number, addCompletedTask: any, item:any) {
   const currentItem = document.getElementById(i.toString())
   if (info.offset.x > 5) {
     currentItem?.classList.add("bg-green-500/40", "text-white")
+    addCompletedTask(item.id)
   }
   if (info.offset.x < 5) {
     currentItem?.classList.add("bg-red-900", "text-white")
   }
 }
-function onDragEnd(event: any, info: any,i:number, item: Item, removeList: Function) {
+function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Function, user: any) {
   const currentItem = document.getElementById(i.toString())
-  currentItem?.classList.remove("bg-green-500/40", "text-white", "bg-red-900", "text-white")
+  currentItem?.classList.remove("bg-red-900")
   if (info.offset.x > 100) {
-    alert("task completed")
+    fetch("http://localhost:8000/completeEvent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: item.id,
+        user: user,
+      }),
+    }).then(res=>res.json()).then(data=>{
+      if(data.message==="Event completed successfully."){
+        currentItem?.classList.add("bg-green-500/40", "text-white")
+      }
+    })
   }
   if (info.offset.x < -50) {
-    removeList(item.title, item.date, item.startTime, item.endTime)
+    fetch("http://localhost:8000/deleteEvent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: item.id,
+        user: user,
+      }),
+    }).then(res => res.json()).then(data => {
+      if (data.message === "Event deleted successfully.") {
+        removeList(item.title, item.date, item.startTime, item.endTime)
+        window.location.reload()
+      }
+    })
   }
 }
 
-function DraggableCard({ item, i, dradConstraintRef, removeList }: { item: any, i: number, dradConstraintRef: any, removeList: any }) {
+
+function DraggableCard({ item, i, dradConstraintRef, removeList, User, CompletedTask, addCompletedTask }: { item: any, i: number, dradConstraintRef: any, removeList: any, User: any, CompletedTask: any, addCompletedTask: any }) {
+    const currentItem = document.getElementById(i.toString())
+    CompletedTask.forEach((completedItem: any) => {
+    if(completedItem === item.id){
+      currentItem?.classList.add("bg-green-500/40", "text-white")
+      console.log(completedItem)
+    }
+  })
+
   return (
     <motion.div
       id={i.toString()}
       drag="x"
       dragConstraints={dradConstraintRef}
-      onDragStart={(event, info) => onDrag(event, info, i,)}
-      onDragEnd={(event, info) => onDragEnd(event, info,i, item, removeList)}
+      onDragStart={(event, info) => onDrag(event, info, i, addCompletedTask, item)}
+      onDragEnd={(event, info) => onDragEnd(event, info, i, item, removeList, User)}
       className={`flex flex-col gap-2 p-8 my-6 rounded-2xl ${cardVariant[i % cardVariant.length]}`}
     >
       <span className="font-bold">{item.title}</span>
-      <span className="font-bold">{item.date}</span>
       <h1>{item.startTime} - {item.endTime}</h1>
     </motion.div>
   )
 }
 
 export default function BlogList() {
-  const { list, removeList }: any = useStore()
+  const { list, addList, removeList, setUser, addCompletedTask, completedTask }: any = useStore()
   const dradConstraintRef = useRef(null)
+  const params = useSearchParams()
+  const user = params.get("user")
+
+  useEffect(() => {
+    setUser(user)
+    fetch("http://localhost:8000/" + user)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach((item: any) => {
+          addList(item.id, item.summary, item.start.dateTime.slice(11, 19), item.end.dateTime.slice(11, 19))
+        })
+      })
+  }, [])
+
   return (
     <div ref={dradConstraintRef}>
       {list.map((item: any, i: number) => (
-        <DraggableCard key={i} item={item} i={i} dradConstraintRef={dradConstraintRef} removeList={removeList} />
+        <DraggableCard 
+        key={i} item={item} i={i} User={user} CompletedTask={completedTask} 
+        addCompletedTask={addCompletedTask} dradConstraintRef={dradConstraintRef} removeList={removeList} 
+        />
       ))}
     </div>
   )

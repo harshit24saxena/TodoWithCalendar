@@ -34,16 +34,44 @@ app.use(session({
   cookie: { secure: false }    // true only with HTTPS
 }));
 
-app.get('/', async (req, res) => {
+app.get('/:user', async (req, res) => {
+
+  const user = req.params.user;
+
   const { data, error } = await supabase
     .from('users')
-    .select('*');
+    .select('google_refresh_token')
+    .eq('email', user)
+    .single();
+
   if (error) return res.status(500).json(error);
-  console.log(data)
-  res.json(data);
+  if (!data || !data.google_refresh_token) {
+    return res.status(404).redirect("http://localhost:3000/login");
+  }
+
+  oauth2Client.setCredentials({
+    refresh_token: data.google_refresh_token
+  });
+
+const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+const start = new Date(`${today}T00:00:00+05:30`).toISOString();
+const end = new Date(`${today}T23:59:59+05:30`).toISOString();
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+{
+  const {data, error} = await calendar.events.list({
+    calendarId: 'primary',
+    timeMin: start,
+    timeMax: end,
+    singleEvents: true,
+    orderBy: 'startTime',
+  });
+
+  if (error) return res.status(500).json(error);
+  res.json(data.items)
+}
 })
 
-// Returns the currently logged-in user from the session
+// Returns the currently logged-in user from the session 
 app.get('/me', (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ message: 'Not logged in.' });
@@ -51,12 +79,12 @@ app.get('/me', (req, res) => {
   res.json({ user: req.session.user });
 })
 
-app.post('/addEvent', async(req, res) => {
+app.post('/addEvent', async (req, res) => {
 
-  const {title, date, startTime, endTime, user} = req.body;
-  
+  const { title, date, startTime, endTime, user } = req.body;
+
   // fetching refresh token from database
-    const {data, error} = await supabase
+  const { data, error } = await supabase
     .from('users')
     .select('google_refresh_token')
     .eq('email', user)
@@ -86,17 +114,83 @@ app.post('/addEvent', async(req, res) => {
   // This calls the calendar API and creates an event
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
   try {
-  const response = await calendar.events.insert({
-    calendarId: 'primary',
-    resource: event,
-  });
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    });
   }
-  catch(err){
+  catch (err) {
     console.log(err)
   }
   res.status(200).json({ message: 'Event added successfully.' });
 })
 
+app.post("/deleteEvent",async (req, res) => {
+  const {id, user} = req.body;
+ // fetching refresh token from database
+  const { data, error } = await supabase
+    .from('users')
+    .select('google_refresh_token')
+    .eq('email', user)
+    .single();
+
+  if (error) return res.status(500).json(error);
+  if (!data || !data.google_refresh_token) {
+    return res.status(404).redirect("http://localhost:3000/login");
+  }
+
+  oauth2Client.setCredentials({
+    refresh_token: data.google_refresh_token
+  });
+  try{
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    await calendar.events.delete({
+      calendarId: 'primary',
+      eventId: id,
+    });
+    res.status(200).json({ message: 'Event deleted successfully.' });
+  }
+  catch(err){
+    console.log(err)
+  }
+
+  
+})
+ 
+app.post("/completeEvent",async (req, res) => {
+  const {id, user} = req.body;
+ // fetching refresh token from database
+  const { data, error } = await supabase
+    .from('users')
+    .select('google_refresh_token')
+    .eq('email', user)
+    .single();
+
+  if (error) return res.status(500).json(error);
+  if (!data || !data.google_refresh_token) {
+    return res.status(404).redirect("http://localhost:3000/login");
+  }
+
+  oauth2Client.setCredentials({
+    refresh_token: data.google_refresh_token
+  });
+  try{
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+    await calendar.events.patch({
+      calendarId: 'primary',
+      eventId: id,
+      requestBody: {
+        colorId: '2',
+      },
+    });
+    res.status(200).json({ message: 'Event deleted successfully.' });
+  }
+  catch(err){
+    console.log(err)
+  }
+
+  
+})
 
 app.get("/login", (req, res) => {
 
@@ -137,7 +231,9 @@ app.get('/oauth2callback', async (req, res) => {
     // --- Fetch current user info from Google ---
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: googleUser } = await oauth2.userinfo.get();
-  
+
+    req.session.user = googleUser.email;
+
     // hash_password is null for upcoming implementation
     const { error } = await supabase
       .from('users')
@@ -147,7 +243,7 @@ app.get('/oauth2callback', async (req, res) => {
       );
     if (error) return res.status(500).json(error);
 
-    res.redirect("http://localhost:3000/?user="+googleUser.email)
+    res.redirect("http://localhost:3000/?user=" + googleUser.email)
 
   } catch (err) {
     console.error('Error retrieving tokens:', err);
