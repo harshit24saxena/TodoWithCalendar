@@ -92,7 +92,7 @@ export default function Login() {
             {/* Google OAuth */}
             <motion.a
               id="google-login"
-              href="http://localhost:8000/login"
+              href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               style={{

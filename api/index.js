@@ -21,7 +21,7 @@ app.use(express.json())
 
 // Allow requests from Next.js dev client
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000', process.env.FRONTEND_URL);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -31,7 +31,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }    // true only with HTTPS
+  cookie: { secure: process.env.NODE_ENV === 'production' ? true : false }    // true only with HTTPS
 }));
 
 app.get('/:user', async (req, res) => {
@@ -46,7 +46,7 @@ app.get('/:user', async (req, res) => {
 
   if (error) return res.status(500).json(error);
   if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect("http://localhost:3000/login");
+    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
   }
 
   oauth2Client.setCredentials({
@@ -92,7 +92,7 @@ app.post('/addEvent', async (req, res) => {
 
   if (error) return res.status(500).json(error);
   if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect("http://localhost:3000/login");
+    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
   }
 
   oauth2Client.setCredentials({
@@ -136,7 +136,7 @@ app.post("/deleteEvent",async (req, res) => {
 
   if (error) return res.status(500).json(error);
   if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect("http://localhost:3000/login");
+    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
   }
 
   oauth2Client.setCredentials({
@@ -168,7 +168,7 @@ app.post("/completeEvent",async (req, res) => {
 
   if (error) return res.status(500).json(error);
   if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect("http://localhost:3000/login");
+    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
   }
 
   oauth2Client.setCredentials({
@@ -243,7 +243,7 @@ app.get('/oauth2callback', async (req, res) => {
       );
     if (error) return res.status(500).json(error);
 
-    res.redirect("http://localhost:3000/?user=" + googleUser.email)
+    res.redirect(process.env.FRONTEND_URL + "/?user=" + googleUser.email)
 
   } catch (err) {
     console.error('Error retrieving tokens:', err);
@@ -253,6 +253,7 @@ app.get('/oauth2callback', async (req, res) => {
 });
 
 
-app.listen(8000, () => {
-  console.log("Server is running on port 8000")
+const port = process.env.PORT || 8000;
+app.listen(port, () => {
+  console.log("Server is running on port " + port)
 })

@@ -27,7 +27,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
   const currentItem = document.getElementById(i.toString())
   currentItem?.classList.remove("bg-red-900")
   if (info.offset.x > 100) {
-    fetch("http://localhost:8000/completeEvent", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/completeEvent`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +43,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
     })
   }
   if (info.offset.x < -50) {
-    fetch("http://localhost:8000/deleteEvent", {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deleteEvent`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function BlogList() {
 
   useEffect(() => {
     setUser(user)
-    fetch("http://localhost:8000/" + user)
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/` + user)
       .then(res => res.json())
       .then(data => {
         data.forEach((item: any) => {

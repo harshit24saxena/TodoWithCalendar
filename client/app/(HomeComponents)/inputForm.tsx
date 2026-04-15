@@ -8,7 +8,7 @@ async function formSubmit(formData:any){
   addList(formData.get("title"), formData.get("date"), formData.get("startTime"), formData.get("endTime"))
   setAddFormToggle(false)
 
-  await fetch("http://localhost:8000/addEvent", {
+  await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/addEvent`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
