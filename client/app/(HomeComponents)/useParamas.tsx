@@ -3,6 +3,6 @@ import BlogList from "./blogList";
 
 export const dynamic = "force-dynamic";
 
-export default function UseParamas({ searchParams }: { searchParams: { user: any } }) {
+export default function UseParamas({ searchParams }: { searchParams: { user?: string } }) {
   return <BlogList user={searchParams.user} />;
 }

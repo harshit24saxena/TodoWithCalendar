@@ -93,7 +93,7 @@ function DraggableCard({ item, i, dradConstraintRef, removeList, User, Completed
 
 
 // Main Component
-export default function BlogList({user}: {user: string}) {
+export default function BlogList({user}: {user?: string}) {
   const { list, addList, removeList, setUser, addCompletedTask, completedTask }: any = useStore()
   const dradConstraintRef = useRef(null)
   
