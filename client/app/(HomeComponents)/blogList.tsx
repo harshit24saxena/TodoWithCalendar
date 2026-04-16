@@ -1,10 +1,11 @@
 "use client"
+
 import { motion } from "motion/react"
 import { useRef } from "react"
 import { useStore } from "../store"
 import { useEffect } from "react"
-import { useSearchParams } from "next/navigation"
 
+// type 
 type Item = { id: string, title: string, date: string, startTime: string, endTime: string }
 
 const cardVariant = [
@@ -13,6 +14,7 @@ const cardVariant = [
   "bg-(--accent-yellow) text-[color-mix(in_oklab,var(--accent-yellow)_100%,#000F0F_30%)] shadow-[-8px_0_color-mix(in_oklab,var(--accent-yellow)_100%,#000F0F_30%),0_5px_5px_2px_rgba(0,0,0,0.3)]",
 ]
 
+// Change styling of card during drag animation
 function onDrag(event: any, info: any, i: number, addCompletedTask: any, item:any) {
   const currentItem = document.getElementById(i.toString())
   if (info.offset.x > 5) {
@@ -23,6 +25,9 @@ function onDrag(event: any, info: any, i: number, addCompletedTask: any, item:an
     currentItem?.classList.add("bg-red-900", "text-white")
   }
 }
+
+
+//  trigger event at end of drag
 function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Function, user: any) {
   const currentItem = document.getElementById(i.toString())
   currentItem?.classList.remove("bg-red-900")
@@ -62,12 +67,12 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
 }
 
 
+// Dragable card 
 function DraggableCard({ item, i, dradConstraintRef, removeList, User, CompletedTask, addCompletedTask }: { item: any, i: number, dradConstraintRef: any, removeList: any, User: any, CompletedTask: any, addCompletedTask: any }) {
     const currentItem = document.getElementById(i.toString())
     CompletedTask.forEach((completedItem: any) => {
     if(completedItem === item.id){
       currentItem?.classList.add("bg-green-500/40", "text-white")
-      console.log(completedItem)
     }
   })
 
@@ -86,15 +91,15 @@ function DraggableCard({ item, i, dradConstraintRef, removeList, User, Completed
   )
 }
 
-export default function BlogList() {
+
+// Main Component
+export default function BlogList({user}: {user: string}) {
   const { list, addList, removeList, setUser, addCompletedTask, completedTask }: any = useStore()
   const dradConstraintRef = useRef(null)
-  const params = useSearchParams()
-  const user = params.get("user")
-
+  
   useEffect(() => {
     setUser(user)
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/` + user)
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/`) 
       .then(res => res.json())
       .then(data => {
         data.forEach((item: any) => {
