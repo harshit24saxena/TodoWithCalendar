@@ -133,7 +133,9 @@ app.post("/completeEvent",SetOauth2ClientCredentials,async (req, res) => {
 })
 
 // LOGIN ENDPOINT
-app.get('/login', (req, res) => {
+app.get('/login',SetOauth2ClientCredentials, (req, res) => {
+
+  const oauth2Client = req.oauth2Client;
   // GOOGLE OAUTH authorizationURL parameters
   // Request calendar + user profile info scopes
   const SCOPES = [
@@ -159,8 +161,9 @@ app.get('/login', (req, res) => {
 })
 
 // OAUTHCALLBACK URL
-app.get('/oauth2callback', async (req, res) => {
+app.get('/oauth2callback', SetOauth2ClientCredentials, async (req, res) => {
   
+  const oauth2Client = req.oauth2Client;
   // accessing tokens for api
   try {
     const code = req.query.code;
