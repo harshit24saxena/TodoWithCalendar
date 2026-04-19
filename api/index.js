@@ -5,60 +5,42 @@ const { google } = require('googleapis');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
-const supabase = require('./supabaseClient.js');
-
-
-// create auth client object 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.CLIENT_ID,
-  process.env.CLIENT_SECRET,
-  process.env.REDIRECT_URI,
-);
+const { supabase } = require('./utilities/supabaseClient.js');
+const SetOauth2ClientCredentials = require('./utilities/googleAuth.js');
 
 // server 
 const app = express()
 app.use(express.json())
-// Allow requests from Next.js dev client
+
+//Access-Control-Allow-Origin CONFIG
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL);
+  res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL); 
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
+// SESSION CONFIG
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: process.env.NODE_ENV === 'production' ? true : false }    // true only with HTTPS
 }));
+ 
 
-app.get('/', async (req, res) => {
+// GET EVENTS ENDPOINT
+app.get('/', SetOauth2ClientCredentials, async (req, res) => {
   
-  const user = req.query.user;
-  console.log(user, "user email")
-  
-  const { data, error } = await supabase
-  .from('users') 
-  .select('google_refresh_token')
-  .eq('email', user)
-  .single();
+const oauth2Client = req.oauth2Client;
 
-if (error) return res.status(500).json(error);
-  if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
-  }
-  
-  oauth2Client.setCredentials({
-    refresh_token: data.google_refresh_token
-  });
-  
 const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
 const start = new Date(`${today}T00:00:00+05:30`).toISOString();
 const end = new Date(`${today}T23:59:59+05:30`).toISOString();
-  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
   {
-    const {data, error} = await calendar.events.list({
+    const {data, error} = await calendar.events.list({ 
       calendarId: 'primary',
       timeMin: start,
       timeMax: end,
@@ -66,32 +48,20 @@ const end = new Date(`${today}T23:59:59+05:30`).toISOString();
       orderBy: 'startTime',
     });
     
+    if(data.items.length == 0) return res.json({message: 'No events found.'})
     if (error) return res.status(500).json(error);
     res.json(data.items)
   }
 })
 
-
-app.post('/addEvent', async (req, res) => {
+//  ADD EVENT ENDPOINT
+app.post('/addEvent', SetOauth2ClientCredentials, async (req, res) => {
   
   const { title, date, startTime, endTime, user } = req.body;
   
-  // fetching refresh token from database
-  const { data, error } = await supabase
-  .from('users')
-  .select('google_refresh_token')
-  .eq('email', user)
-  .single();
+  // fetching oauth2Client from middleware
+  const oauth2Client = req.oauth2Client;
 
-  if (error) return res.status(500).json(error);
-  if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
-  }
-  
-  oauth2Client.setCredentials({
-    refresh_token: data.google_refresh_token
-  });
-  
   let event = {
     summary: `${title}`,
     start: {
@@ -118,23 +88,11 @@ app.post('/addEvent', async (req, res) => {
   res.status(200).json({ message: 'Event added successfully.' });
 })
 
-app.post("/deleteEvent",async (req, res) => {
-  const {id, user} = req.body;
-  // fetching refresh token from database
-  const { data, error } = await supabase
-  .from('users')
-    .select('google_refresh_token')
-    .eq('email', user)
-    .single();
-
-  if (error) return res.status(500).json(error);
-  if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
-  }
-  
-  oauth2Client.setCredentials({
-    refresh_token: data.google_refresh_token
-  });
+// DELETE EVENT ENDPOINT
+app.post("/deleteEvent",SetOauth2ClientCredentials,async (req, res) => {
+  const {id} = req.body;
+  // fetching oauth2Client from middleware
+  const oauth2Client = req.oauth2Client;
   try{
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     await calendar.events.delete({
@@ -149,23 +107,13 @@ app.post("/deleteEvent",async (req, res) => {
   
   
 })
- 
-app.post("/completeEvent",async (req, res) => {
-  const {id, user} = req.body;
+
+// COMPLETE EVENT ENDPOINT
+app.post("/completeEvent",SetOauth2ClientCredentials,async (req, res) => {
+  const {id} = req.body;
  // fetching refresh token from database
-  const { data, error } = await supabase
-  .from('users')
-  .select('google_refresh_token')
-    .eq('email', user)
-    
-  if (error) return res.status(500).json(error);
-  if (!data || !data.google_refresh_token) {
-    return res.status(404).redirect(process.env.FRONTEND_URL + "/login");
-  }
-  
-  oauth2Client.setCredentials({
-    refresh_token: data.google_refresh_token
-  });
+  const oauth2Client = req.oauth2Client;
+
   try{
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     await calendar.events.patch({
@@ -184,9 +132,8 @@ app.post("/completeEvent",async (req, res) => {
   
 })
 
-
+// LOGIN ENDPOINT
 app.get('/login', (req, res) => {
-  console.log("LOGIN HIT");
   // GOOGLE OAUTH authorizationURL parameters
   // Request calendar + user profile info scopes
   const SCOPES = [
@@ -211,6 +158,7 @@ app.get('/login', (req, res) => {
   res.redirect(authorizationUrl);
 })
 
+// OAUTHCALLBACK URL
 app.get('/oauth2callback', async (req, res) => {
   
   // accessing tokens for api

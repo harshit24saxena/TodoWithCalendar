@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "motion/react"
+import { useRouter } from "next/navigation"
 import { useRef } from "react"
 import { useStore } from "../store"
 import { useEffect } from "react"
@@ -32,7 +33,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
   const currentItem = document.getElementById(i.toString())
   currentItem?.classList.remove("bg-red-900")
   if (info.offset.x > 100) {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/completeEvent`, {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/completeEvent/?user=${user}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,7 +49,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
     })
   }
   if (info.offset.x < -50) {
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deleteEvent`, {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deleteEvent/?user=${user}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -96,21 +97,28 @@ function DraggableCard({ item, i, dradConstraintRef, removeList, User, Completed
 export default function BlogList({user}: {user?: string}) {
   const { list, addList, removeList, setUser, addCompletedTask, completedTask }: any = useStore()
   const dradConstraintRef = useRef(null)
-  
+  const router = useRouter();
+
   useEffect(() => {
     setUser(user)
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/`) 
-      .then(res => res.json())
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/?user=${user}`) 
+      .then(res =>{ 
+        if(res.status === 404) return router.push("/login")
+        return res.json()
+      })
       .then(data => {
-        data.forEach((item: any) => {
-          addList(item.id, item.summary, item.start.dateTime.slice(11, 19), item.end.dateTime.slice(11, 19))
-        })
+        if(!data) return
+        if(data.message == "No events found.") 
+          {return "No events found."} 
+        else {data.forEach((item: any) => {
+            addList(item.id, item.summary, item.start.dateTime.slice(11, 19), item.end.dateTime.slice(11, 19))
+        })}
       })
   }, [])
 
   return (
     <div ref={dradConstraintRef}>
-      {list.map((item: any, i: number) => (
+      {list.length == 0 ? <p className="text-black text-2xl">No events found.</p> : list.map((item: any, i: number) => (
         <DraggableCard 
         key={i} item={item} i={i} User={user} CompletedTask={completedTask} 
         addCompletedTask={addCompletedTask} dradConstraintRef={dradConstraintRef} removeList={removeList} 
