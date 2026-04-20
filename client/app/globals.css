@@ -27,6 +27,24 @@
   --spacing-md: var(--spacing-medium);
   --spacing-lg: var(--spacing-large);
   --breakpoint-sm: 500px;
+  --animate-complete: complete .5s ease-in-out forwards;
+  --animate-delete: delete .5s ease-in-out forwards;
+  @keyframes complete {
+    from {
+     box-shadow: 1px 0 10px green, 0 1px 10px green;
+    }
+    to {
+      box-shadow: 5px 0 10px green, 0 -5px 10px green;
+    }
+  };
+  @keyframes delete {
+    from {
+      box-shadow: -1px 0 10px red, 0 1px 10px red;
+    }
+    to {
+      box-shadow: -5px 0 10px red, 0 -5px 10px red;
+    }
+  }
 }
 
  

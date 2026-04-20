@@ -7,7 +7,7 @@ const {addList, setAddFormToggle, User}:any = useStore()
 async function formSubmit(formData:any){
   addList(formData.get("title"), formData.get("date"), formData.get("startTime"), formData.get("endTime"))
   setAddFormToggle(false)
-
+  
   await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/addEvent/?user=${User}`, {
     method: "POST",
     headers: {
@@ -18,7 +18,6 @@ async function formSubmit(formData:any){
       date: formData.get("date"),
       startTime: formData.get("startTime"),
       endTime: formData.get("endTime"),
-      user: User,
     }),
   })
 }
