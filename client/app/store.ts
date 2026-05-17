@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
 interface StoreState {
-    list: {id: string; title: string; data: string; startTime: string; endTime: string, colorId: string }[];
-    addList: (id: string, title: string, data: string, startTime: string, endTime: string, colorId: string) => void;
-    removeList: (id: string, title: string, data: string, startTime: string, endTime: string) => void;
+    list: {id: string; title: string; startTime: string; endTime: string, colorId: number }[];
+    addList: (id: string, title: string, startTime: string, endTime: string, colorId: number) => void;
+    removeList: (id: string) => void;
     addFormToggle: boolean;
     setAddFormToggle: (toggle: boolean) => void;
     navToggle: boolean;
@@ -15,13 +15,13 @@ interface StoreState {
 export const useStore = create<StoreState>((set) => ({
 
     list: [],
-    addList: (id: string, title: string, startTime: string, endTime: string, colorId: string) => set((state: any) => ({ list: [...state.list, { id, title, startTime, endTime, colorId }] })),
-    removeList: (id: string, title: string, startTime: string, endTime: string) => set((state: any) => ({ list: state.list.filter((item: any) => item.id !== id) })),
+    addList: (id, title, startTime, endTime, colorId) => set((state) => ({ list: [...state.list, { id, title, startTime, endTime, colorId }] })),
+    removeList: (id) => set((state) => ({ list: state.list.filter((item) => item.id !== id) })),
     addFormToggle: false,
-    setAddFormToggle: (toggle: boolean) => set({ addFormToggle: toggle }),
+    setAddFormToggle: (toggle) => set({ addFormToggle: toggle }),
     navToggle: false,
-    setNavToggle: (toggle: boolean) => set({ navToggle: toggle }),
+    setNavToggle: (toggle) => set({ navToggle: toggle }),
     User: "",
-    setUser: (user: string) => set({ User: user }),
+    setUser: (user) => set({ User: user }),
 
 }))

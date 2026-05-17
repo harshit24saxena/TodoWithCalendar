@@ -5,7 +5,7 @@ import { motion } from "motion/react"
 
 
 function addTask() {
-  const {addFormToggle, setAddFormToggle}:any = useStore()
+  const {addFormToggle, setAddFormToggle} = useStore()
   return (
   <>
     {addFormToggle && <InputForm />}

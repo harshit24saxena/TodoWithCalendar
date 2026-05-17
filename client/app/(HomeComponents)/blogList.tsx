@@ -1,15 +1,15 @@
 "use client"
-import DraggableCard from "./draggableCard"
+import DraggableCard from "./DraggableCard/draggableCard"
 import { useRouter } from "next/navigation"
 import { useRef } from "react"
 import { useStore } from "../store"
 import { useEffect } from "react"
-
-
+import { Item } from "../type"
+ 
 // Main Component
-export default function BlogList({user}: {user?: string}) {
-  const { list, addList, removeList, setUser }: any = useStore()
-  const dradConstraintRef = useRef(null)
+export default function BlogList({user}: {user: string}) {
+  const { list, addList, removeList, setUser } = useStore()
+  const dragConstraintRef = useRef(null)
   const router = useRouter();
 
   useEffect(() => {
@@ -30,10 +30,10 @@ export default function BlogList({user}: {user?: string}) {
   }, [])
 
   return (
-    <div ref={dradConstraintRef}>
-      {list.length == 0 ? <p className="text-black text-2xl">No events found.</p> : list.map((item: any, i: number) => (
+    <div ref={dragConstraintRef}>
+      {list.length == 0 ? <p className="text-black text-2xl">No events found.</p> : list.map((item: Item, i: number) => (
         <DraggableCard 
-        key={i} item={item} i={i} User={user} dradConstraintRef={dradConstraintRef} removeList={removeList} 
+           key={item.id} item={item} i={i} User={user} dragConstraintRef={dragConstraintRef} removeList={removeList} 
         />
       ))}
     </div>
