@@ -8,7 +8,7 @@ import { Item } from "../type"
  
 // Main Component
 export default function BlogList({user}: {user: string}) {
-  const { list, addList, removeList, setUser } = useStore()
+  const { list, addList, removeList, completeList, setUser } = useStore()
   const dragConstraintRef = useRef(null)
   const router = useRouter();
 
@@ -33,7 +33,7 @@ export default function BlogList({user}: {user: string}) {
     <div ref={dragConstraintRef}>
       {list.length == 0 ? <p className="text-black text-2xl">No events found.</p> : list.map((item: Item, i: number) => (
         <DraggableCard 
-           key={item.id} item={item} i={i} User={user} dragConstraintRef={dragConstraintRef} removeList={removeList} 
+           key={item.id} item={item} i={i} User={user} dragConstraintRef={dragConstraintRef} removeList={removeList} completeList={completeList}
         />
       ))}
     </div>
