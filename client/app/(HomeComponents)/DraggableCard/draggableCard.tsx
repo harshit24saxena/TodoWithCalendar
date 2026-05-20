@@ -26,7 +26,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
   currentItem?.classList.remove("animate-complete", "animate-delete")
   if (info.offset.x > 50) {
     completeEventApiCall(user, item)
-    currentItem?.classList.add("opacity-40")
+    currentItem?.classList.add("opacity-70")
   }
   if (info.offset.x < -50) {
     deleteEventApiCall(user, item)
@@ -37,7 +37,6 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
 export default function DraggableCard({ item, i, dragConstraintRef, removeList, User }: { item: Item, i: number, dragConstraintRef: any, removeList: any, User: string }) {
     useEffect(() => {
     const currentItem = document.getElementById(item.id)
-    console.log(item)
     item.colorId == 2 && currentItem?.classList.add("opacity-40")
   }, [])
 

@@ -7,8 +7,7 @@ import Addtask from "./(HomeComponents)/addTask";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ user?: string }>;
-  
+  searchParams: Promise<{ user: string }>;
 }) {
   const params = await searchParams;
   return (

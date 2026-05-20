@@ -63,5 +63,4 @@ app.use('/oauth2callback', oauth2callbackRoute);
 const port = process.env.PORT || 8000;
 app.listen(port, () => {
   console.log("Server is running on port " + port)
-  console.log(process.env.FRONTEND_URL)
 })
