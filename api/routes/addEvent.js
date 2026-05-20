@@ -23,11 +23,11 @@ router.post('/', async (req, res) => {
             calendarId: 'primary',
             resource: event,
         });
+        res.status(200).json(response.data);
     }
     catch (err) {
         console.log('error from add event endpoing', err.message)
     }
-    res.status(200).json({ message: 'Event added successfully.' });
 })
 
 module.exports = router;

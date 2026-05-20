@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
     const calendar = req.calendar;
-
+//  event list for whole day 
     const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
     const start = new Date(`${today}T00:00:00+05:30`).toISOString();
     const end = new Date(`${today}T23:59:59+05:30`).toISOString();

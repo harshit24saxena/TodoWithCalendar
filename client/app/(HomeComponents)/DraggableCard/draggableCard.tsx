@@ -21,12 +21,12 @@ function onDrag(event: any, info: any, i: number, item: any) {
 }
 
 //  trigger event at end of drag
-function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Function, completeList: Function, user: string) {
+function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Function, user: string) {
   const currentItem = document.getElementById(item.id)
   currentItem?.classList.remove("animate-complete", "animate-delete")
   if (info.offset.x > 50) {
     completeEventApiCall(user, item)
-    completeList(item.id)
+    console.log(item.id)
     currentItem?.classList.add("opacity-70")
   }
   if (info.offset.x < -50) {
@@ -35,7 +35,7 @@ function onDragEnd(event: any, info: any, i: number, item: Item, removeList: Fun
   }
 }
 
-export default function DraggableCard({ item, i, dragConstraintRef, removeList, completeList, User }: { item: Item, i: number, dragConstraintRef: any, removeList: any, completeList: any, User: string }) {
+export default function DraggableCard({ item, i, dragConstraintRef, removeList, User }: { item: Item, i: number, dragConstraintRef: any, removeList: any, User: string }) {
     useEffect(() => {
     const currentItem = document.getElementById(item.id)
     item.colorId == 2 && currentItem?.classList.add("opacity-40")
@@ -47,7 +47,7 @@ export default function DraggableCard({ item, i, dragConstraintRef, removeList, 
       drag="x"
       dragConstraints={dragConstraintRef}
       onDragStart={(event, info) => onDrag(event, info, i, item)}
-      onDragEnd={(event, info) => onDragEnd(event, info, i, item, removeList, completeList, User)}
+      onDragEnd={(event, info) => onDragEnd(event, info, i, item, removeList, User)}
       className={`relative flex flex-col gap-2 p-8 my-6 rounded-2xl ${cardVariant[i % cardVariant.length]}`}
     >
       <p className="font-bold">{item.title}</p>

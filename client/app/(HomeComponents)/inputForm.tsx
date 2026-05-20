@@ -1,15 +1,13 @@
 import { useStore } from "../store"
 import { motion } from "motion/react"
-import { FormDataType } from "../type"
 
 export default function InputForm() {
 const {addList, setAddFormToggle, User} = useStore()
 
 async function formSubmit(formData:any){
-  addList(formData.get("date"), formData.get("title"), formData.get("startTime"), formData.get("endTime"), 0)
   setAddFormToggle(false)
   
-  await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/addEvent/?user=${User}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/addEvent/?user=${User}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,8 +17,16 @@ async function formSubmit(formData:any){
       date: formData.get("date"),
       startTime: formData.get("startTime"),
       endTime: formData.get("endTime"),
-    }),
+    }), 
   })
+  const data = await res.json();
+  addList(
+    data.id,
+    data.summary,
+    data.start.dateTime.slice(11, 19),
+    data.end.dateTime.slice(11, 19),
+    1
+  );
 }
     return (
         <div onClick={() => setAddFormToggle(false)} className="fixed bottom-0 left-0 w-full h-full bg-black/50 z-1 border border-amber-50">
