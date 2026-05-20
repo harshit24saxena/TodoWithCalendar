@@ -14,8 +14,8 @@ router.post("/", async (req, res) => {
         res.status(200).json({ message: 'Event deleted successfully.' });
     }
     catch (err) {
-        console.log(err)
+        console.log('error from delete event endpoing', err.message)
     }
 
-})
+}) 
 module.exports = router;

@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
         });
     }
     catch (err) {
-        console.log(err)
+        console.log('error from add event endpoing', err.message)
     }
     res.status(200).json({ message: 'Event added successfully.' });
 })

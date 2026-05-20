@@ -12,10 +12,10 @@ router.post("/",  async (req, res) => {
                 colorId: '2',
             },
         });
-        res.status(200).json({ message: 'Event deleted successfully.' });
+        res.status(200).json({ message: 'Event completed successfully.' });
     }
     catch (err) {
-        console.log(err)
+        console.log('error from completed event endpoing', err, new Date().getHours())
     }
 })
 
